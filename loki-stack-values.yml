@@ -1,0 +1,18 @@
+loki:
+ enabled: true
+ persistence:
+  enabled: false
+  storageClassName: standard
+
+promtail:
+ enabled: true
+ pipelineStages:
+  - cri: {}
+  - json:
+    expressions:
+     is_even: is_even
+     level: level
+     version: version
+
+grafana:
+ enabled: false
