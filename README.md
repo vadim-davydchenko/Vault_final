@@ -164,3 +164,67 @@ enforce_hostnames=false
 
 `vault policy write cert-issue-policy cert-issue-policy.hcl`
 
+**20) Activate Authentication kubernetes. Use as a host https://$KUBERNETES_PORT_443_TCP_ADDR:443**
+
+`vault auth enable kubernetes`
+
+*Take token_reviewer_jwt*
+
+`kubectl create token vault -n vault`
+
+*Setting Authentication*
+
+```
+vault write auth/kubernetes/config \
+token_reviewer_jwt="<your_jwt_token_vault>" \
+kubernetes_host=<https://$KUBERNETES_PORT_443_TCP_ADDR:443> \
+kubernetes_ca_cert=@/home/user/.minikube/ca.crt
+```
+
+**21) Create an auth/kubernetes/role/issuer role with a cert-issue-policy that can only be accessed by service accounts named issuer from the namespace default, ttl=20m**
+
+```
+vault write auth/kubernetes/role/issuer \
+bound_service_account_names=issuer \
+bound_service_account_namespaces=default \
+policies=cert-issue-policy \
+ttl=20m
+```
+
+**22) Install cert-manager**
+
+`kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.9.1/cert-manager.crds.yaml`
+
+`helm install cert-manager --namespace cert-manager --version v1.9.1 jetstack/cert-manager`
+
+**23) Create in kubernetes service account issuer**
+
+`kubectl create sa issuer -n default`
+
+**24) Add secret in kubernetes and setting certmanager**
+
+`kubectl apply -f issuer-secret.yaml`
+
+`export ISSUER_SECRET_REF=$(kubectl get secrets --output=json | jq -r '.items[].metadata | select(.name|startswith("issuer-token-")).name')`
+
+`kubectl apply -f vault-issuer.yaml`
+
+`kubectl apply -f myapp-cert.yaml`
+
+**25) Change the type of prometheus and grafana services in the monitoring namespace from ClusterIP to NodePort**
+
+`kubectl edit svc -n monitoring prometheus-kube-prometheus-prometheus`
+
+`kubectl edit svc -n monitoring prometheus-grafana`
+
+**26) Expand Helm Chart Loki**
+
+`helm install loki grafana/loki-stack -n monitoring -f loki-stack-values.yml`
+
+**27) Configure vault for logging to stdout**
+
+`vault audit enable file file_path=stdout`
+
+**28) Bringing Grafana outside**
+
+`kubectl port-forward -n monitoring svc/prometheus-grafana --address=0.0.0.0 3000:80`
