@@ -77,3 +77,90 @@ kubectl exec -ti -n vault vault-0 -- vault operator raft list-peers
 `helm install -n vault-a vault ./vault -f vault-auto-unseal-helm-values.yml \ `
 
 `kubectl -n vault-a exec -it vault-0 -- vault operator init | cat > .vault-recovery`
+
+*User-pass authorization*
+
+**11) Init secrets for path prod, stage, dev and access userpass**
+
+`vault auth enable userpass`
+
+`vault secrets enable -path=prod -version=2 kv`
+
+`vault secrets enable -path=stage -version=2 kv`
+
+`vault secrets enable -path=dev -version=2 kv`
+
+**12) Create policy secret-admin-policy, which will satisfy the following conditions:**
+- for path "auth/*" will access next permissions: все, кроме patch и deny
+- по пути "sys/auth/*" will access: "create", "update", "delete", "sudo"
+- по пути "sys/auth" will access only read: "read"
+- по пути "sys/policies/acl" only list ACL: "list"
+- по путям "sys/policies/acl/", "secret/", "prod/*", "stage/*", "dev/*", "sys/mounts*": all, except patch and deny
+- по пути "sys/health" next permissions: "read", "sudo"
+
+`vault policy write admin admin.hcl`
+
+**13) Create policy developer, which will satisfy the following conditions:**
+- по пути "prod/*" - "read", "create", "update"
+- по пути "stage/*" - "read", "create", "update"
+- по пути "dev/*" - "read", "create", "update"
+
+`vault policy write developer developer.hcl`
+
+**14) Create policy junior, which will satisfy the following conditions:**
+- по пути "stage/*" - "read", "create", "update"
+
+`vault policy write junior junior.hcl`
+
+**15) Create users:**
+- admin with password nimda and previosly created policy admin
+- developer  with password ved and previosly created policy developer
+- junior  with password roinuj and previosly created policy junior
+
+`vault write auth/userpass/users/admin password=nimda policies="secret-admin-policy"`
+
+`vault write auth/userpass/users/developer password=ved policies="developer"`
+
+`vault write auth/userpass/users/junior password=roinuj policies="junior"`
+
+
+*PKI*
+
+**16) Activate PKI for path rebrain-pki, max-lease-ttl=8760h**
+
+`vault secrets enable -path rebrain-pki pki`
+
+`vault secrets tune -max-lease-ttl=8760h rebrain-pki`
+
+**17) Write certificate for path rebrain-pki/config/ca**
+
+`vault write rebrain-pki/config/ca pem_bundle=@bundle.pem`
+
+**18) Create role rebrain-pki/roles/local-certs for create certificate with next parameters:**
+- max_ttl 24 hours
+- localhost deny
+- allow domain myapp.st_login.rebrain.me
+- allow bare domain
+- deny subdomain
+- deny wildcard certificate
+- deny ip sans
+
+```
+vault write rebrain-pki/roles/local-certs \
+ttl="24h" \
+allow_localhost=false \
+allowed_domains="myapp.st_login.rebrain.me" \
+allow_bare_domains=true \
+allow_subdomains=false \
+allow_wildcard_certificates=false \
+allow_ip_sans=false
+enforce_hostnames=false
+```
+
+**19) Create policy cert-issue-policy, which will satisfy the following conditions:**
+- path "rebrain-pki*" - "read", "list"
+- path "rebrain-pki/sign/local-certs" - "create", "update"
+- path "rebrain-pki/issue/local-certs" - "create"
+
+`vault policy write cert-issue-policy cert-issue-policy.hcl`
+
