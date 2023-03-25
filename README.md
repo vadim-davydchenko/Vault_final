@@ -63,3 +63,17 @@ kubectl exec -ti -n vault vault-0 -- vault operator raft list-peers
 `vault secrets enable transit`
 
 `vault write -f transit/keys/autounseal`
+
+**8) Create policy autounseal, token for which will allow to execute autounseal**
+
+`vault policy write autounseal autounseal-policy.hcl`
+
+**9) Generate orphan token for policy autounseal with period 24 hours**
+
+`vault token create -orphan -policy="autounseal" -period=24h`
+
+**10) Write config vault for autounseal in file `vault-auto-unseal-helm-values.yml` and install chart**
+
+`helm install -n vault-a vault ./vault -f vault-auto-unseal-helm-values.yml \ `
+
+`kubectl -n vault-a exec -it vault-0 -- vault operator init | cat > .vault-recovery`
