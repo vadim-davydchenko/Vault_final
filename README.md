@@ -27,7 +27,7 @@ helm repo add hashicorp https://helm.releases.hashicorp.com
 
 `helm install -n monitoring prometheus prometheus-community/kube-prometheus-stack`
 
-**4) Deploy cluster with Raft backend**
+**4) [Deploy](https://github.com/vadim-davydchenko/Vault_final/blob/master/vault-helm-config.yaml) cluster with Raft backend**
 
 `helm install -n vault vault ./vault-custom -f vault-helm-config.yaml`
 
@@ -64,7 +64,7 @@ kubectl exec -ti -n vault vault-0 -- vault operator raft list-peers
 
 `vault write -f transit/keys/autounseal`
 
-**8) Create policy autounseal, token for which will allow to execute autounseal**
+**8) Create policy [autounseal](https://github.com/vadim-davydchenko/Vault_final/blob/master/autounseal-policy.hcl), token for which will allow to execute autounseal**
 
 `vault policy write autounseal autounseal-policy.hcl`
 
@@ -72,7 +72,7 @@ kubectl exec -ti -n vault vault-0 -- vault operator raft list-peers
 
 `vault token create -orphan -policy="autounseal" -period=24h`
 
-**10) Write config vault for autounseal in file `vault-auto-unseal-helm-values.yml` and install chart**
+**10) Write config vault for autounseal in file `[vault-auto-unseal-helm-values.yml](https://github.com/vadim-davydchenko/Vault_final/blob/master/vault-auto-unseal-helm-values.yml)` and install chart**
 
 `helm install -n vault-a vault ./vault -f vault-auto-unseal-helm-values.yml \ `
 
@@ -90,7 +90,7 @@ kubectl exec -ti -n vault vault-0 -- vault operator raft list-peers
 
 `vault secrets enable -path=dev -version=2 kv`
 
-**12) Create policy secret-admin-policy, which will satisfy the following conditions:**
+**12) Create policy [secret-admin-policy](https://github.com/vadim-davydchenko/Vault_final/blob/master/admin.hcl), which will satisfy the following conditions:**
 - for path "auth/*" will access next permissions: все, кроме patch и deny
 - по пути "sys/auth/*" will access: "create", "update", "delete", "sudo"
 - по пути "sys/auth" will access only read: "read"
@@ -100,14 +100,14 @@ kubectl exec -ti -n vault vault-0 -- vault operator raft list-peers
 
 `vault policy write admin admin.hcl`
 
-**13) Create policy developer, which will satisfy the following conditions:**
+**13) Create policy [developer](https://github.com/vadim-davydchenko/Vault_final/blob/master/developer.hcl), which will satisfy the following conditions:**
 - по пути "prod/*" - "read", "create", "update"
 - по пути "stage/*" - "read", "create", "update"
 - по пути "dev/*" - "read", "create", "update"
 
 `vault policy write developer developer.hcl`
 
-**14) Create policy junior, which will satisfy the following conditions:**
+**14) Create policy [junior](https://github.com/vadim-davydchenko/Vault_final/blob/master/junior.hcl), which will satisfy the following conditions:**
 - по пути "stage/*" - "read", "create", "update"
 
 `vault policy write junior junior.hcl`
@@ -157,7 +157,7 @@ allow_ip_sans=false
 enforce_hostnames=false
 ```
 
-**19) Create policy cert-issue-policy, which will satisfy the following conditions:**
+**19) Create policy [cert-issue-policy](https://github.com/vadim-davydchenko/Vault_final/blob/master/cert-issue-policy.hcl), which will satisfy the following conditions:**
 - path "rebrain-pki*" - "read", "list"
 - path "rebrain-pki/sign/local-certs" - "create", "update"
 - path "rebrain-pki/issue/local-certs" - "create"
@@ -201,7 +201,7 @@ ttl=20m
 
 `kubectl create sa issuer -n default`
 
-**24) Add secret in kubernetes and setting certmanager**
+**24) Add [secret](https://github.com/vadim-davydchenko/Vault_final/blob/master/issuer-secret.yaml) in kubernetes and [setting](https://github.com/vadim-davydchenko/Vault_final/blob/master/vault-issuer.yaml) [certmanager](https://github.com/vadim-davydchenko/Vault_final/blob/master/myapp-cert.yaml)**
 
 `kubectl apply -f issuer-secret.yaml`
 
@@ -217,7 +217,7 @@ ttl=20m
 
 `kubectl edit svc -n monitoring prometheus-grafana`
 
-**26) Expand Helm Chart Loki**
+**26) Expand Helm Chart [Loki](https://github.com/vadim-davydchenko/Vault_final/blob/master/loki-stack-values.yml)**
 
 `helm install loki grafana/loki-stack -n monitoring -f loki-stack-values.yml`
 
