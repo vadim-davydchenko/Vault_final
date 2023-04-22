@@ -92,11 +92,11 @@ kubectl exec -ti -n vault vault-0 -- vault operator raft list-peers
 
 **12) Create policy [secret-admin-policy](https://github.com/vadim-davydchenko/Vault_final/blob/master/admin.hcl), which will satisfy the following conditions:**
 - for path "auth/*" will access next permissions: все, кроме patch и deny
-- по пути "sys/auth/*" will access: "create", "update", "delete", "sudo"
-- по пути "sys/auth" will access only read: "read"
-- по пути "sys/policies/acl" only list ACL: "list"
-- по путям "sys/policies/acl/", "secret/", "prod/*", "stage/*", "dev/*", "sys/mounts*": all, except patch and deny
-- по пути "sys/health" next permissions: "read", "sudo"
+- for path "sys/auth/*" will access: "create", "update", "delete", "sudo"
+- for path "sys/auth" will access only read: "read"
+- for path "sys/policies/acl" only list ACL: "list"
+- for path "sys/policies/acl/", "secret/", "prod/*", "stage/*", "dev/*", "sys/mounts*": all, except patch and deny
+- for path "sys/health" next permissions: "read", "sudo"
 
 `vault policy write admin admin.hcl`
 
