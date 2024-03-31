@@ -101,14 +101,14 @@ kubectl exec -ti -n vault vault-0 -- vault operator raft list-peers
 `vault policy write admin admin.hcl`
 
 **13) Create policy [developer](https://github.com/vadim-davydchenko/Vault_final/blob/master/developer.hcl), which will satisfy the following conditions:**
-- по пути "prod/*" - "read", "create", "update"
-- по пути "stage/*" - "read", "create", "update"
-- по пути "dev/*" - "read", "create", "update"
+- for path "prod/*" - "read", "create", "update"
+- for path "stage/*" - "read", "create", "update"
+- for path "dev/*" - "read", "create", "update"
 
 `vault policy write developer developer.hcl`
 
 **14) Create policy [junior](https://github.com/vadim-davydchenko/Vault_final/blob/master/junior.hcl), which will satisfy the following conditions:**
-- по пути "stage/*" - "read", "create", "update"
+- for path "stage/*" - "read", "create", "update"
 
 `vault policy write junior junior.hcl`
 
